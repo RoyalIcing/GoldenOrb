@@ -24,6 +24,9 @@ defimpl GoldenOrb.CSS, for: Any do
     {:ok, store} = Wasmex.store(pid)
     {:ok, instance} = Wasmex.instance(pid)
 
+    call_function = &Wasmex.call_function(pid, &1, &2)
+    read_binary = &Wasmex.Memory.read_binary(store, memory, &1, &2)
+
     for {global_name, {:global, %{type: type, mutability: :var}}} <-
           Wasmex.Module.exports(wasm_module) do
       initial_value = Map.get(struct_stringly, global_name)
@@ -38,11 +41,14 @@ defimpl GoldenOrb.CSS, for: Any do
 
         integer when is_integer(integer) ->
           Wasmex.Instance.set_global_value(store, instance, global_name, integer)
+
+        atom when is_atom(atom) ->
+          {:ok, [value]} = call_function.("#{global_name}_#{atom}", [])
+          # IO.inspect("#{global_name}_#{atom}")
+          IO.inspect(value)
+          Wasmex.Instance.set_global_value(store, instance, global_name, value)
       end
     end
-
-    call_function = &Wasmex.call_function(pid, &1, &2)
-    read_binary = &Wasmex.Memory.read_binary(store, memory, &1, &2)
 
     {:ok, [ptr, size]} = call_function.(:text_css, [])
     text = read_binary.(ptr, size)
