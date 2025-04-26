@@ -21,18 +21,48 @@ defmodule PlugTest do
   defmodule CSSExample do
     use Orb
 
-    defstruct []
+    defstruct dark?: false
+
+    export do
+      global I32, :mutable do
+        @dark? 0
+      end
+    end
 
     defw text_css(), Str do
-      "body { background-color: #000; }"
+      if @dark?, result: Str do
+        """
+        body { background-color: white; text: black; }
+        """
+      else
+        """
+        body { background-color: black; text: white; }
+        """
+      end
     end
   end
 
-  test "text_css/1", %{conn: conn} do
-    value = %CSSExample{}
-    conn = GoldenOrb.Plug.send_css(conn, value)
+  describe "send_css/2" do
+    test "when dark? is false", %{conn: conn} do
+      value = %CSSExample{dark?: false}
+      conn = GoldenOrb.Plug.send_css(conn, value)
 
-    assert get_resp_header(conn, "content-type") == ["text/css; charset=utf-8"]
-    assert conn.resp_body == "body { background-color: #000; }"
+      assert get_resp_header(conn, "content-type") == ["text/css; charset=utf-8"]
+
+      assert conn.resp_body == """
+             body { background-color: black; text: white; }
+             """
+    end
+
+    test "when dark? is true", %{conn: conn} do
+      value = %CSSExample{dark?: true}
+      conn = GoldenOrb.Plug.send_css(conn, value)
+
+      assert get_resp_header(conn, "content-type") == ["text/css; charset=utf-8"]
+
+      assert conn.resp_body == """
+             body { background-color: white; text: black; }
+             """
+    end
   end
 end
