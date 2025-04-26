@@ -9,6 +9,7 @@ defmodule GoldenOrb.MixProject do
       version: "0.0.1",
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
+      consolidate_protocols: Mix.env() != :test,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: "Gold-plated standard library for Orb",
@@ -39,7 +40,8 @@ defmodule GoldenOrb.MixProject do
       {:orb, "~> 0.2.2"},
       {:plug, "~> 1.17.0"},
       # {:orb, path: "../orb", override: true},
-      {:orb_wasmtime, "~> 0.1.10", only: :test},
+      # {:orb_wasmtime, "~> 0.1.10", only: :test},
+      {:wasmex, "~> 0.9.2", only: :test},
       {:ex_doc, "~> 0.27", only: :dev, runtime: false}
     ]
   end

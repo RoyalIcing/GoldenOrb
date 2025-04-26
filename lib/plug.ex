@@ -1,8 +1,6 @@
 defmodule GoldenOrb.Plug do
   @behaviour Plug
 
-  import Plug.Conn
-
   def init(opts) do
     opts
   end
@@ -35,6 +33,20 @@ defmodule GoldenOrb.Plug do
     |> Plug.Conn.put_resp_content_type("text/html")
 
     # |> Plug.Conn.send_resp(conn.status || 200, html)
+  end
+
+  @doc """
+  The Orb module must implement the `text_css/0` function.
+  """
+  def send_css(conn, struct) do
+    # Protocol.assert_impl!(GoldenOrb.CSS, orb_module)
+
+    # struct = struct!(orb_module)
+    text_css = GoldenOrb.CSS.text_css(struct)
+
+    conn
+    |> Plug.Conn.put_resp_content_type("text/css")
+    |> Plug.Conn.send_resp(conn.status || 200, text_css)
   end
 
   @doc """
