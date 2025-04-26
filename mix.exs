@@ -7,7 +7,8 @@ defmodule GoldenOrb.MixProject do
     [
       app: :golden_orb,
       version: "0.0.1",
-      elixir: "~> 1.15",
+      elixir: "~> 1.17",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: "Gold-plated standard library for Orb",
@@ -21,6 +22,10 @@ defmodule GoldenOrb.MixProject do
     ]
   end
 
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
@@ -31,7 +36,8 @@ defmodule GoldenOrb.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:orb, "~> 0.0.17"},
+      {:orb, "~> 0.2.2"},
+      {:plug, "~> 1.17.0"},
       # {:orb, path: "../orb", override: true},
       {:orb_wasmtime, "~> 0.1.10", only: :test},
       {:ex_doc, "~> 0.27", only: :dev, runtime: false}
@@ -53,7 +59,7 @@ defmodule GoldenOrb.MixProject do
       main: "GoldenOrb",
       # logo: "orb-logo-orange.svg",
       extras: [
-        "README.md",
+        "README.md"
         # "guides/01-intro.livemd"
       ]
     ]

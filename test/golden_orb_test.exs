@@ -3,6 +3,6 @@ defmodule GoldenOrbTest do
   doctest GoldenOrb
 
   test "greets the world" do
-    assert GoldenOrb.hello() == :world
+    assert GoldenOrb.hello() == :coming_soon
   end
 end

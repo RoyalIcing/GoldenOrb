@@ -9,7 +9,7 @@ defmodule GoldenOrb do
   ## Examples
 
       iex> GoldenOrb.hello()
-      :world
+      :coming_soon
 
   """
   def hello do
