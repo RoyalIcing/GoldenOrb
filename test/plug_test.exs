@@ -26,27 +26,9 @@ defmodule PlugTest do
     defw text_css(), Str do
       "body { background-color: #000; }"
     end
-
-    # defimpl GoldenOrb.CSS do
-    #   def text_css(_context) do
-    #     wat = Orb.to_wat(@for)
-    #     {:ok, pid} = Wasmex.start_link(%{bytes: wat})
-    #     {:ok, memory} = Wasmex.memory(pid)
-    #     {:ok, store} = Wasmex.store(pid)
-
-    #     call_function = &Wasmex.call_function(pid, &1, &2)
-    #     read_binary = &Wasmex.Memory.read_binary(store, memory, &1, &2)
-
-    #     {:ok, [ptr, size]} = call_function.(:text_css, [])
-    #     text = read_binary.(ptr, size)
-    #     text
-    #   end
-    # end
   end
 
   test "text_css/1", %{conn: conn} do
-    # Protocol.consolidate(GoldenOrb.CSS, [CSSExample])
-
     value = %CSSExample{}
     conn = GoldenOrb.Plug.send_css(conn, value)
 
