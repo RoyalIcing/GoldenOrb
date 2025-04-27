@@ -24,15 +24,14 @@ defmodule GoldenOrb.Plug do
   @doc """
   The Orb module must implement the `text_html/0` function.
   """
-  def send_html(conn, orb_module) do
-    Protocol.assert_impl!(GoldenOrb.HTML, orb_module)
+  def send_html(conn, struct) do
+    # Protocol.assert_impl!(GoldenOrb.HTML, orb_module)
 
-    # TODO: Use Wasmex to run the WebAssembly module and read the HTML string.
+    html_source = GoldenOrb.HTML.text_html(struct)
 
     conn
     |> Plug.Conn.put_resp_content_type("text/html")
-
-    # |> Plug.Conn.send_resp(conn.status || 200, html)
+    |> Plug.Conn.send_resp(conn.status || 200, html_source)
   end
 
   @doc """

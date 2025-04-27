@@ -69,6 +69,85 @@ defmodule PlugTest do
     end
   end
 
+  describe "send_html/2" do
+    defmodule HTMLExample do
+      use Orb
+
+      defstruct lang: :en
+
+      export do
+        global I32, :mutable do
+          @lang 0
+        end
+      end
+
+      defw(lang_en(), I32, do: :en)
+      defw(lang_es(), I32, do: :es)
+
+      defw html_attributes(), Str do
+        if @lang === const(:es), result: Str do
+          ~S|lang="es"|
+        else
+          ~S|lang="en"|
+        end
+      end
+
+      defw html_head(), Str do
+        if @lang === const(:es), result: Str do
+          """
+          <title>Hola Mundo</title>
+          """
+        else
+          """
+          <title>Hello World</title>
+          """
+        end
+      end
+
+      defw html_body(), Str do
+        if @lang === const(:es), result: Str do
+          """
+          <body>
+          <h1>Hola Mundo</h1>
+          """
+        else
+          """
+          <body>
+          <h1>Hello World</h1>
+          """
+        end
+      end
+    end
+
+    test "when default", %{conn: conn} do
+      value = %HTMLExample{lang: :en}
+      conn = GoldenOrb.Plug.send_html(conn, value)
+
+      assert get_resp_header(conn, "content-type") == ["text/html; charset=utf-8"]
+
+      assert conn.resp_body == """
+             <!DOCTYPE html><html lang="en"><meta charset=utf-8>
+             <title>Hello World</title>
+             <body>
+             <h1>Hello World</h1>
+             """
+    end
+
+    test "when silly? is true", %{conn: conn} do
+      value = %HTMLExample{lang: :es}
+      conn = GoldenOrb.Plug.send_html(conn, value)
+
+      assert get_resp_header(conn, "content-type") == ["text/html; charset=utf-8"]
+
+      assert conn.resp_body == """
+             <!DOCTYPE html><html lang="es"><meta charset=utf-8>
+             <title>Hola Mundo</title>
+             <body>
+             <h1>Hola Mundo</h1>
+             """
+    end
+  end
+
   describe "send_javascript/2" do
     defmodule JSExample do
       use Orb

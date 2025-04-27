@@ -1,11 +1,3 @@
-defprotocol GoldenOrb.HTML do
-  # def text_html(context)
-  def lang(context)
-  def title(context)
-  def html_head(context)
-  def html_body(context)
-end
-
 defprotocol GoldenOrb.RobotsTxt do
   def robots_txt(context)
 end
