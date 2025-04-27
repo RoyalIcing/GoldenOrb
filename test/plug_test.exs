@@ -208,12 +208,12 @@ defmodule PlugTest do
       assert conn.resp_body == """
              <!DOCTYPE html><html lang="es"><meta charset=utf-8>
              <title>Hola Mundo</title>
-             <script type="module">
-             document.title = &quot;Welcome to Prestige Worldwide 🛥️🎶&quot;;
-             </script>
              <style>
              body { background-color: red; text: yellow; }
              </style>
+             <script type="module">
+             document.title = &quot;Welcome to Prestige Worldwide 🛥️🎶&quot;;
+             </script>
              <body>
              <h1>Hola Mundo</h1>
              """

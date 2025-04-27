@@ -40,9 +40,9 @@ defimpl GoldenOrb.HTML, for: Any do
       # "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
       # "<title>#{struct.title}</title>",
       html_head,
-      fragment_heads,
+      Enum.reverse(fragment_heads),
       html_body,
-      fragment_bodies
+      Enum.reverse(fragment_bodies)
     ]
   end
 
