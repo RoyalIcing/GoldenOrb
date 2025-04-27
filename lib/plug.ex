@@ -22,7 +22,7 @@ defmodule GoldenOrb.Plug do
   end
 
   @doc """
-  The Orb module must implement the `text_html/0` function.
+  The Orb module must implement the `html_attributes/0`, `html_head/0`, `html_body/0` functions.
   """
   def send_html(conn, struct) do
     # Protocol.assert_impl!(GoldenOrb.HTML, orb_module)
