@@ -166,6 +166,25 @@ defmodule PlugTest do
     end
   end
 
+  defmodule NavExample do
+    use Orb
+
+    defstruct []
+
+    defw html_head_content(), Str do
+      ""
+    end
+
+    defw html_body_content(), Str do
+      """
+      <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+      </nav>
+      """
+    end
+  end
+
   describe "send_html/2" do
     test "when default", %{conn: conn} do
       value = %HTMLExample{lang: :en}
@@ -197,11 +216,13 @@ defmodule PlugTest do
   end
 
   describe "send_html/3" do
+    # We have 4 WebAssembly modules: HTMLExample, CSSExample, JSExample, NavExample. The HTML one acts as the layout providing the base html. The CSS renders the inline stylesheet. The JS renders the inline ES module. The NavExample renders the <nav>. These interleave with body content from the layout.
     test "html + css + js", %{conn: conn} do
       document = %HTMLExample{lang: :es}
       stylesheet = %CSSExample{theme: :hot_dog_stand}
       javascript = %JSExample{silly?: true}
-      conn = GoldenOrb.Plug.send_html(conn, document, [stylesheet, javascript])
+      nav = %NavExample{}
+      conn = GoldenOrb.Plug.send_html(conn, document, [stylesheet, javascript, nav])
 
       assert get_resp_header(conn, "content-type") == ["text/html; charset=utf-8"]
 
@@ -216,6 +237,10 @@ defmodule PlugTest do
              </script>
              <body>
              <h1>Hola Mundo</h1>
+             <nav>
+               <a href="/">Home</a>
+               <a href="/about">About</a>
+             </nav>
              """
     end
   end
