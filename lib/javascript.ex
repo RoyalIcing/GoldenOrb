@@ -1,10 +1,10 @@
-defprotocol GoldenOrb.CSS do
+defprotocol GoldenOrb.JavaScript do
   @fallback_to_any true
-  def text_css(context)
+  def text_javascript(context)
 end
 
-defimpl GoldenOrb.CSS, for: Any do
-  def text_css(%module{} = struct) do
+defimpl GoldenOrb.JavaScript, for: Any do
+  def text_javascript(%module{} = struct) do
     wat = Orb.to_wat(module)
     {:ok, store} = Wasmex.Store.new()
     {:ok, wasm_module} = Wasmex.Module.compile(store, wat)
@@ -40,7 +40,7 @@ defimpl GoldenOrb.CSS, for: Any do
       end
     end
 
-    {:ok, [ptr, size]} = call_function.(:text_css, [])
+    {:ok, [ptr, size]} = call_function.(:text_javascript, [])
     text = read_binary.(ptr, size)
     text
   end

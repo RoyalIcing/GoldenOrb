@@ -39,11 +39,22 @@ defmodule GoldenOrb.Plug do
   Your Orb module must implement the `GoldenOrb.CSS` protocol and the `text_css/0` wasm function.
   """
   def send_css(conn, struct) do
-    text_css = GoldenOrb.CSS.text_css(struct)
+    css_source = GoldenOrb.CSS.text_css(struct)
 
     conn
     |> Plug.Conn.put_resp_content_type("text/css")
-    |> Plug.Conn.send_resp(conn.status || 200, text_css)
+    |> Plug.Conn.send_resp(conn.status || 200, css_source)
+  end
+
+  @doc """
+  Your Orb module must implement the `GoldenOrb.JavaScript` protocol and the `text_javascript/0` wasm function.
+  """
+  def send_javascript(conn, struct) do
+    js_source = GoldenOrb.JavaScript.text_javascript(struct)
+
+    conn
+    |> Plug.Conn.put_resp_content_type("text/javascript")
+    |> Plug.Conn.send_resp(conn.status || 200, js_source)
   end
 
   @doc """
