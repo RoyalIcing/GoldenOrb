@@ -11,7 +11,7 @@ defmodule GoldenOrb.Plug do
   end
 
   @doc """
-  The Orb module is compiled into a WebAssembly binary.
+  Serves a WebAssembly binary compiled from the passed Orb module.
   """
   def send_wasm(conn, orb_module) do
     wasm = Orb.to_wasm(orb_module)
