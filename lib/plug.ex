@@ -36,12 +36,9 @@ defmodule GoldenOrb.Plug do
   end
 
   @doc """
-  The Orb module must implement the `text_css/0` function.
+  Your Orb module must implement the `GoldenOrb.CSS` protocol and the `text_css/0` wasm function.
   """
   def send_css(conn, struct) do
-    # Protocol.assert_impl!(GoldenOrb.CSS, orb_module)
-
-    # struct = struct!(orb_module)
     text_css = GoldenOrb.CSS.text_css(struct)
 
     conn
