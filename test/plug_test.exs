@@ -18,7 +18,7 @@ defmodule PlugTest do
     assert conn.resp_body =~ <<42>>
   end
 
-  defmodule CSSExample do
+  defmodule CSSTheme do
     use Orb
 
     defstruct theme: :default
@@ -47,7 +47,7 @@ defmodule PlugTest do
 
   describe "send_css/2" do
     test "when theme is default", %{conn: conn} do
-      value = %CSSExample{}
+      value = %CSSTheme{}
       conn = GoldenOrb.Plug.send_css(conn, value)
 
       assert get_resp_header(conn, "content-type") == ["text/css; charset=utf-8"]
@@ -58,7 +58,7 @@ defmodule PlugTest do
     end
 
     test "when theme is hot_dog_stand", %{conn: conn} do
-      value = %CSSExample{theme: :hot_dog_stand}
+      value = %CSSTheme{theme: :hot_dog_stand}
       conn = GoldenOrb.Plug.send_css(conn, value)
 
       assert get_resp_header(conn, "content-type") == ["text/css; charset=utf-8"]
@@ -69,7 +69,7 @@ defmodule PlugTest do
     end
   end
 
-  defmodule JSExample do
+  defmodule JSDynamicTitle do
     use Orb
 
     defstruct silly?: false
@@ -95,7 +95,7 @@ defmodule PlugTest do
 
   describe "send_javascript/2" do
     test "when default", %{conn: conn} do
-      value = %JSExample{}
+      value = %JSDynamicTitle{}
       conn = GoldenOrb.Plug.send_javascript(conn, value)
 
       assert get_resp_header(conn, "content-type") == ["text/javascript; charset=utf-8"]
@@ -106,7 +106,7 @@ defmodule PlugTest do
     end
 
     test "when silly? is true", %{conn: conn} do
-      value = %JSExample{silly?: true}
+      value = %JSDynamicTitle{silly?: true}
       conn = GoldenOrb.Plug.send_javascript(conn, value)
 
       assert get_resp_header(conn, "content-type") == ["text/javascript; charset=utf-8"]
@@ -117,7 +117,7 @@ defmodule PlugTest do
     end
   end
 
-  defmodule HTMLExample do
+  defmodule HTMLLayout do
     use Orb
 
     defstruct lang: :en
@@ -166,7 +166,7 @@ defmodule PlugTest do
     end
   end
 
-  defmodule NavExample do
+  defmodule PrimaryNav do
     use Orb
 
     defstruct []
@@ -177,7 +177,7 @@ defmodule PlugTest do
 
     defw html_body_content(), Str do
       """
-      <nav>
+      <nav aria-label="Primary">
         <a href="/">Home</a>
         <a href="/about">About</a>
       </nav>
@@ -187,7 +187,7 @@ defmodule PlugTest do
 
   describe "send_html/2" do
     test "when default", %{conn: conn} do
-      value = %HTMLExample{lang: :en}
+      value = %HTMLLayout{lang: :en}
       conn = GoldenOrb.Plug.send_html(conn, value)
 
       assert get_resp_header(conn, "content-type") == ["text/html; charset=utf-8"]
@@ -201,7 +201,7 @@ defmodule PlugTest do
     end
 
     test "when silly? is true", %{conn: conn} do
-      value = %HTMLExample{lang: :es}
+      value = %HTMLLayout{lang: :es}
       conn = GoldenOrb.Plug.send_html(conn, value)
 
       assert get_resp_header(conn, "content-type") == ["text/html; charset=utf-8"]
@@ -216,13 +216,14 @@ defmodule PlugTest do
   end
 
   describe "send_html/3" do
-    # We have 4 WebAssembly modules: HTMLExample, CSSExample, JSExample, NavExample. The HTML one acts as the layout providing the base html. The CSS renders the inline stylesheet. The JS renders the inline ES module. The NavExample renders the <nav>. These interleave with body content from the layout.
+    # We have 4 WebAssembly modules: HTMLLayout, CSSTheme, JSDynamicTitle, PrimaryNav. The HTML one acts as the layout providing the base html. The CSS renders the inline stylesheet. The JS renders the inline ES module. The PrimaryNav renders the <nav>. These interleave with body content from the layout.
     test "html + css + js", %{conn: conn} do
-      document = %HTMLExample{lang: :es}
-      stylesheet = %CSSExample{theme: :hot_dog_stand}
-      javascript = %JSExample{silly?: true}
-      nav = %NavExample{}
-      conn = GoldenOrb.Plug.send_html(conn, document, [stylesheet, javascript, nav])
+      conn =
+        GoldenOrb.html(conn, %HTMLLayout{lang: :es}, [
+          %CSSTheme{theme: :hot_dog_stand},
+          %JSDynamicTitle{silly?: true},
+          %PrimaryNav{}
+        ])
 
       assert get_resp_header(conn, "content-type") == ["text/html; charset=utf-8"]
 
@@ -237,7 +238,7 @@ defmodule PlugTest do
              </script>
              <body>
              <h1>Hola Mundo</h1>
-             <nav>
+             <nav aria-label="Primary">
                <a href="/">Home</a>
                <a href="/about">About</a>
              </nav>
