@@ -1,6 +1,24 @@
 <!doctype html>
-<div id="container"></div>
+<div id="container" style="background: black"></div>
 <script type="x-shader/x-fragment" id="fragmentShader">
+    #version 300 es
+    precision mediump float;
+    uniform vec2 r;
+    // uniform vec2 u_mouse;
+    uniform float t;
+    out vec4 fragColor;
+
+    void main() {
+        vec2 st = gl_FragCoord.xy/r.xy;
+        st.x *= r.x/r.y;
+
+        vec3 color = vec3(0.);
+        color = vec3(st.x,st.y,abs(sin(t)));
+
+        fragColor = vec4(color,1.0);
+    }
+</script>
+<script type="x-shader/x-fragment" id="fragmentShader2">
     #version 300 es
     precision mediump float;
     in vec2 vUv;
@@ -26,7 +44,7 @@
         // redish in x, greenish in y
         // Try to modify the following line to have a blue gradient
         // from left to right.
-        fragColor = vec4(st.x, st.y, 0.0, 1.0); // RGBA
+        fragColor = vec4(st.x, st.y, abs(sin(iTime)), 1.0); // RGBA
     }
 </script>
 <script type="module">
@@ -46,7 +64,7 @@ void main() {
     vUv = (a_position + 1.0) * 0.5;
 }`;
 
-    const fs = document.getElementById("fragmentShader").textContent.trim();
+    const fs = document.getElementById("fragmentShader2").textContent.trim();
 
     function compileShader(type, source) {
         const shader = gl.createShader(type);
@@ -79,6 +97,8 @@ void main() {
     gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
 
     // Get uniform locations
+    const tLoc = gl.getUniformLocation(program, "t");
+    const rLoc = gl.getUniformLocation(program, "r");
     const iResolutionLoc = gl.getUniformLocation(program, "iResolution");
     const iTimeLoc = gl.getUniformLocation(program, "iTime");
     const iTimeDeltaLoc = gl.getUniformLocation(program, "iTimeDelta");
@@ -87,7 +107,7 @@ void main() {
     const iDateLoc = gl.getUniformLocation(program, "iDate");
     const iSampleRateLoc = gl.getUniformLocation(program, "iSampleRate");
 
-    let startTime = Date.now();
+    let startTime = performance.now();
     let frame = 0;
     let lastTime = 0;
 
@@ -101,6 +121,8 @@ void main() {
         gl.useProgram(program);
 
         // Set uniforms
+        gl.uniform2f(rLoc, canvas.width, canvas.height);
+        gl.uniform1f(tLoc, elapsedTime);
         gl.uniform3f(iResolutionLoc, canvas.width, canvas.height, 1.0);
         gl.uniform1f(iTimeLoc, elapsedTime);
         gl.uniform1f(iTimeDeltaLoc, deltaTime);
