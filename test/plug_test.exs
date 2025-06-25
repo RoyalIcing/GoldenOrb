@@ -171,10 +171,6 @@ defmodule PlugTest do
 
     defstruct []
 
-    defw html_head_content(), Str do
-      ""
-    end
-
     defw html_body_content(), Str do
       """
       <nav aria-label="Primary">

@@ -60,6 +60,14 @@ defimpl GoldenOrb.HTML, for: Any do
       GoldenOrb.Renderer.orb_struct_implements?(struct, [:html_head_content, :html_body_content]) ->
         GoldenOrb.Renderer.render_orb_struct(struct, [:html_head_content, :html_body_content])
 
+      GoldenOrb.Renderer.orb_struct_implements?(struct, [:html_head_content]) ->
+        GoldenOrb.Renderer.render_orb_struct(struct, [:html_head_content])
+        |> Map.put(:html_body_content, [])
+
+      GoldenOrb.Renderer.orb_struct_implements?(struct, [:html_body_content]) ->
+        GoldenOrb.Renderer.render_orb_struct(struct, [:html_body_content])
+        |> Map.put(:html_head_content, [])
+
       GoldenOrb.Renderer.orb_struct_implements?(struct, [:text_javascript]) ->
         javascript_source = GoldenOrb.JavaScript.text_javascript(struct)
 

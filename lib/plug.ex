@@ -1,4 +1,8 @@
 defmodule GoldenOrb.Plug do
+  @moduledoc """
+  Renders Orb modules and serves them over HTTP.
+  """
+
   @behaviour Plug
 
   def init(opts) do

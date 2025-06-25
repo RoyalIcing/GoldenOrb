@@ -1,4 +1,8 @@
 defmodule GoldenOrb.Renderer do
+  @moduledoc """
+  Renders an Orb module to a string using Wasmex.
+  """
+
   defp compile_orb_struct(%module{}) do
     wat = Orb.to_wat(module)
     {:ok, wasmex_store} = Wasmex.Store.new()
@@ -6,6 +10,9 @@ defmodule GoldenOrb.Renderer do
     %{wasmex_module: wasmex_module, wasmex_store: wasmex_store}
   end
 
+  @doc """
+  Returns `true` if the given Orb `struct` implements all of the functions in `func_names`.
+  """
   def orb_struct_implements?(struct, func_names) do
     %{wasmex_module: wasmex_module} = compile_orb_struct(struct)
 
