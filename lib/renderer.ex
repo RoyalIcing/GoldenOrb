@@ -6,7 +6,18 @@ defmodule GoldenOrb.Renderer do
   defp compile_orb_struct(%module{}) do
     wat = Orb.to_wat(module)
     {:ok, wasmex_store} = Wasmex.Store.new()
-    {:ok, wasmex_module} = Wasmex.Module.compile(wasmex_store, wat)
+
+    wasmex_module =
+      Wasmex.Module.compile(wasmex_store, wat)
+      |> case do
+        {:ok, wasmex_module} ->
+          wasmex_module
+
+        {:error, reason} when is_binary(reason) ->
+          IO.puts(wat)
+          raise reason
+      end
+
     %{wasmex_module: wasmex_module, wasmex_store: wasmex_store}
   end
 
