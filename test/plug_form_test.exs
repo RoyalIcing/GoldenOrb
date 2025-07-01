@@ -186,7 +186,6 @@ defmodule PlugFormTest do
   end
 
   defmodule NavLink do
-    require Orb.Control
     use Orb
     defstruct href: "", text: "", current_page?: false
 
@@ -207,6 +206,8 @@ defmodule PlugFormTest do
       end
     end
 
+    Orb.set_func_prefix("NavLink")
+
     defw html_write(
            href: Str,
            text: Str,
@@ -215,9 +216,6 @@ defmodule PlugFormTest do
            write_size: I32
          ) ::
            {I32.UnsafePointer, I32} do
-      local(original_size: I32)
-      original_size = write_size
-
       Orb.Control.block :items do
         "<a "
         "href=\""
@@ -285,6 +283,108 @@ defmodule PlugFormTest do
     end
   end
 
+  defmodule Form do
+    use Orb
+    defstruct id: :required, method: "get", children: []
+
+    def get(opts), do: struct!(__MODULE__, opts)
+
+    Orb.set_func_prefix("Form")
+
+    defw html_write_start(
+           id: Str,
+           method: Str,
+           write: I32.UnsafePointer,
+           write_size: I32
+         ) :: {I32.UnsafePointer, I32} do
+      Orb.Control.block :items do
+        ~S|<form id="|
+        id
+        ~S|" method="|
+        method
+        ~s|">\n|
+      end
+      |> Writer.write!(mut!(write), mut!(write_size))
+
+      {write, write_size}
+    end
+
+    alias __MODULE__
+
+    defimpl Writer do
+      def write!(form, write!, write_size!) do
+        Orb.InstructionSequence.new(nil, [
+          Orb.InstructionSequence.new(nil, [
+            # TODO: Make %Orb.Instruction.Call implement Writer
+            @for.html_write_start(
+              form.id,
+              form.method,
+              write!.read,
+              write_size!.read
+            ),
+            write_size!.write,
+            write!.write
+          ]),
+          Writer.write!(form.children, write!, write_size!),
+          Writer.write!(~s|</form>\n|, write!, write_size!)
+        ])
+      end
+    end
+  end
+
+  defmodule Textbox do
+    use Orb
+    defstruct id: "", name: "", value: "", label: ""
+
+    Orb.set_func_prefix("Textbox")
+
+    defw html_write(
+           id: Str,
+           name: Str,
+           value: Str,
+           label: Str,
+           write: I32.UnsafePointer,
+           write_size: I32
+         ) :: {I32.UnsafePointer, I32} do
+      Orb.Control.block :items do
+        ~S|<label for="|
+        id
+        ~S|">|
+        label
+        ~S|<input id="|
+        id
+        ~S|" name="|
+        name
+        ~S|" value="|
+        value
+        ~S|"></label>|
+        ?\n
+      end
+      |> Writer.write!(mut!(write), mut!(write_size))
+
+      {write, write_size}
+    end
+
+    alias __MODULE__
+
+    defimpl Writer do
+      def write!(textbox, write!, write_size!) do
+        Orb.InstructionSequence.new(nil, [
+          @for.html_write(
+            textbox.id,
+            textbox.name,
+            textbox.value,
+            textbox.label,
+            write!.read,
+            write_size!.read
+          ),
+          write_size!.write,
+          write!.write
+        ])
+      end
+    end
+  end
+
   defmodule PrimaryNav do
     use Orb
     defstruct [:path]
@@ -292,6 +392,8 @@ defmodule PlugFormTest do
     Memory.pages(2)
 
     Orb.include(NavLink)
+    Orb.include(Form)
+    Orb.include(Textbox)
 
     import Writer
 
@@ -326,12 +428,48 @@ defmodule PlugFormTest do
     end
   end
 
+  defmodule ProfileForm do
+    use Orb
+    defstruct [:path]
+
+    Memory.pages(2)
+
+    Orb.include(Form)
+    Orb.include(Textbox)
+
+    import Writer
+
+    defp body() do
+      Form.get(
+        id: "profile",
+        children: [
+          %Textbox{id: "bio", name: "bio", value: "", label: "Bio"}
+        ]
+      )
+    end
+
+    defw html_body_content() :: Str do
+      local(write: I32.UnsafePointer, write_size: I32)
+      write = 0x10000
+      write_size = 0x10000
+
+      write!(
+        body(),
+        mut!(write),
+        mut!(write_size)
+      )
+
+      {0x10000, 0x10000 - write_size}
+    end
+  end
+
   describe "send_html/3" do
     test "form with method get", %{conn: conn} do
       conn =
         GoldenOrb.html(conn, %HTMLLayout{lang: :es}, [
           %ViewTransitions{},
           %PrimaryNav{},
+          %ProfileForm{},
           %SearchForm{}
         ])
 
@@ -348,6 +486,9 @@ defmodule PlugFormTest do
              <a href="/" aria-current=page>Home</a>
              <a href="/about">About</a>
              </nav>
+             <form id="profile" method="get">
+             <label for="bio">Bio<input id="bio" name="bio" value=""></label>
+             </form>
              <form>
                <input name=\"q\" placeholder=\"Search\">
              </form>
