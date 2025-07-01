@@ -207,12 +207,6 @@ defmodule PlugFormTest do
       end
     end
 
-    # export do
-    #   global I32, :mutable do
-    #     @current_page? 0
-    #   end
-    # end
-
     defw html_write(
            href: Str,
            text: Str,
@@ -257,22 +251,6 @@ defmodule PlugFormTest do
       #   mut!(write_size)
       # )
 
-      # Control.block :write do
-      #   Writer.write!("<a ", mut!(write), mut!(write_size))
-      #   Writer.write!("href=\"", mut!(write), mut!(write_size))
-      #   Writer.write!(href, mut!(write), mut!(write_size))
-      #   Writer.write!("\"", mut!(write), mut!(write_size))
-
-      #   if current_page? do
-      #     Writer.write!(" aria-current=page", mut!(write), mut!(write_size))
-      #   end
-
-      #   Writer.write!(">", mut!(write), mut!(write_size))
-      #   Writer.write!(text, mut!(write), mut!(write_size))
-      #   Writer.write!("</a>", mut!(write), mut!(write_size))
-      # end
-
-      # write_size - original_size
       {write, write_size}
     end
 
