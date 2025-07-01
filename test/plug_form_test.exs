@@ -67,43 +67,243 @@ defmodule PlugFormTest do
   defmodule Write do
     use Orb
 
-    def write!(string, write!, write_size!) when is_binary(string) do
-      read_size = byte_size(string)
+    def write!(string, write!, write_size!) when is_binary(string) or is_struct(string) do
+      read_size =
+        case string do
+          string when is_binary(string) ->
+            byte_size(string)
+
+          %Orb.VariableReference{} = var_ref ->
+            var_ref[:size]
+        end
+
+      read_ptr =
+        case string do
+          string when is_binary(string) ->
+            Orb.DSL.const(string).memory_offset
+
+          %Orb.VariableReference{} = var_ref ->
+            var_ref[:ptr]
+        end
 
       Orb.snippet do
         # use Orb.DSL
         # use Orb.Numeric.DSL
 
-        assert!(write_size!.read >= read_size)
-        Memory.copy!(write!.read, Orb.DSL.const(string).memory_offset, read_size)
+        if write_size!.read < read_size do
+          unreachable!()
+        end
+
+        # assert!(write_size!.read >= read_size)
+        Memory.copy!(write!.read, read_ptr, read_size)
         Orb.MutRef.store(write!, write!.read + read_size)
         Orb.MutRef.store(write_size!, write_size!.read - read_size)
       end
     end
   end
 
-  defmodule NavLink do
-    use Orb
-    defstruct current_page?: false
+  defprotocol Writer do
+    @spec write!(t, any, any) :: any
+    def write!(value, write!, write_size!)
+  end
 
-    export do
-      global I32, :mutable do
-        @current_page? 0
+  defimpl Writer, for: BitString do
+    def write!(value, write!, write_size!) do
+      Write.write!(value, write!, write_size!)
+    end
+  end
+
+  defimpl Writer, for: Integer do
+    def write!(value, write!, write_size!) do
+      require Orb
+
+      Orb.snippet do
+        if write_size!.read < 1 do
+          unreachable!()
+        end
+
+        Orb.Memory.store!(Orb.I32.U8, write!.read, value)
+        Orb.MutRef.store(write!, write!.read + 1)
+        Orb.MutRef.store(write_size!, write_size!.read - 1)
+      end
+    end
+  end
+
+  defimpl Writer, for: List do
+    def write!(values, write!, write_size!) do
+      Orb.InstructionSequence.new(
+        nil,
+        for value <- values do
+          Writer.write!(value, write!, write_size!)
+        end
+      )
+    end
+  end
+
+  defimpl Writer, for: Orb.VariableReference do
+    def write!(var_ref, write!, write_size!) when var_ref.push_type == Orb.Str do
+      require Orb
+
+      Orb.snippet do
+        if write_size!.read < var_ref[:size] do
+          unreachable!()
+        end
+
+        Orb.Memory.copy!(write!.read, var_ref[:ptr], var_ref[:size])
+        Orb.MutRef.store(write!, write!.read + var_ref[:size])
+        Orb.MutRef.store(write_size!, write_size!.read - var_ref[:size])
+      end
+    end
+  end
+
+  defimpl Writer, for: Orb.IfElse do
+    def write!(if_else, write!, write_size!) do
+      if_else =
+        update_in(if_else.when_true.body, fn body ->
+          [Writer.write!(body, write!, write_size!)]
+        end)
+
+      if_else =
+        if if_else.when_false do
+          update_in(if_else.when_false.body, fn body ->
+            [Writer.write!(body, write!, write_size!)]
+          end)
+        else
+          if_else
+        end
+
+      Map.put(if_else, :push_type, nil)
+    end
+  end
+
+  defimpl Writer, for: Orb.Block do
+    def write!(block, write!, write_size!) do
+      update_in(block.body, fn instructions ->
+        Orb.InstructionSequence.new(nil, [Writer.write!(instructions.body, write!, write_size!)])
+      end)
+      |> Map.put(:push_type, nil)
+    end
+  end
+
+  defmodule NavLink do
+    require Orb.Control
+    use Orb
+    defstruct href: "", text: "", current_page?: false
+
+    def fields do
+      [
+        href: Str,
+        text: Str,
+        current_page?: I32
+      ]
+    end
+
+    with @behaviour Orb.CustomType do
+      @impl Orb.CustomType
+      def wasm_type() do
+        fields()
+        |> Keyword.values()
+        |> List.to_tuple()
       end
     end
 
-    # Memory.pages(2)
+    # export do
+    #   global I32, :mutable do
+    #     @current_page? 0
+    #   end
+    # end
 
-    defw html_write(write: I32.UnsafePointer, write_size: I32), I32, original_size: I32 do
+    defw html_write(
+           href: Str,
+           text: Str,
+           current_page?: I32,
+           write: I32.UnsafePointer,
+           write_size: I32
+         ) ::
+           {I32.UnsafePointer, I32} do
+      local(original_size: I32)
       original_size = write_size
 
-      Control.block Write do
-        Write.write!("<a ", mut!(write), mut!(write_size))
+      Orb.Control.block :items do
+        "<a "
+        "href=\""
+        href
+        "\""
 
-        # <a href="uri">Text</a>
+        if current_page? do
+          " aria-current=page"
+        end
+
+        ">"
+        text
+        "</a>"
       end
+      |> Writer.write!(mut!(write), mut!(write_size))
 
-      write_size - original_size
+      # Writer.write!(
+      #   [
+      #     "<a ",
+      #     "href=\"",
+      #     href,
+      #     "\"",
+      #     if current_page? do
+      #       " aria-current=page"
+      #     end,
+      #     ">",
+      #     text,
+      #     "</a>"
+      #   ],
+      #   mut!(write),
+      #   mut!(write_size)
+      # )
+
+      # Control.block :write do
+      #   Writer.write!("<a ", mut!(write), mut!(write_size))
+      #   Writer.write!("href=\"", mut!(write), mut!(write_size))
+      #   Writer.write!(href, mut!(write), mut!(write_size))
+      #   Writer.write!("\"", mut!(write), mut!(write_size))
+
+      #   if current_page? do
+      #     Writer.write!(" aria-current=page", mut!(write), mut!(write_size))
+      #   end
+
+      #   Writer.write!(">", mut!(write), mut!(write_size))
+      #   Writer.write!(text, mut!(write), mut!(write_size))
+      #   Writer.write!("</a>", mut!(write), mut!(write_size))
+      # end
+
+      # write_size - original_size
+      {write, write_size}
+    end
+
+    alias __MODULE__
+
+    defimpl Writer do
+      def write!(nav_link, write!, write_size!) do
+        # %Orb.VariableReference{entries: [write!, write_size!]}
+        # |> Orb.VariableReference.set(NavLink.html_write(value, write!.read, write_size!.read))
+
+        Orb.InstructionSequence.new(nil, [
+          NavLink.html_write(
+            nav_link.href,
+            nav_link.text,
+            case nav_link.current_page? do
+              false -> 0
+              true -> 1
+              other -> other
+            end,
+            write!.read,
+            write_size!.read
+          ),
+          write_size!.write,
+          write!.write
+        ])
+
+        # Orb.snippet Orb.Numeric, write!: I32.UnsafePointer, write_size!: I32 do
+        #   {write!, write_size!} = NavLink.html_write(value, dbg(write!).read, write_size!.read)
+        #   # {write!, write_size!} = NavLink.html_write(value, write!, write_size!)
+        # end
+      end
     end
   end
 
@@ -113,13 +313,31 @@ defmodule PlugFormTest do
 
     Memory.pages(2)
 
-    defw html_body_content(), Str, write: I32.UnsafePointer, write_size: I32 do
+    Orb.include(NavLink)
+
+    import Writer
+
+    defw html_body_content() :: Str do
+      local(write: I32.UnsafePointer, write_size: I32)
       write = 0x10000
       write_size = 0x10000
 
-      Write.write!(~S|<nav aria-label="Primary">|, mut!(write), mut!(write_size))
+      write!(
+        [
+          ~S|<nav aria-label="Primary">|,
+          ?\n,
+          %NavLink{href: "/", text: "Home", current_page?: true},
+          ?\n,
+          %NavLink{href: "/about", text: "About"},
+          ?\n,
+          ~S|</nav>|,
+          ?\n
+        ],
+        mut!(write),
+        mut!(write_size)
+      )
 
-      {write, 0x10000 - write_size}
+      {0x10000, 0x10000 - write_size}
 
       # """
       # <nav aria-label="Primary">
@@ -149,6 +367,8 @@ defmodule PlugFormTest do
              </style>
              <body>
              <nav aria-label="Primary">
+             <a href="/" aria-current=page>Home</a>
+             <a href="/about">About</a>
              </nav>
              <form>
                <input name=\"q\" placeholder=\"Search\">
