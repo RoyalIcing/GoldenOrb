@@ -42,7 +42,8 @@ defmodule GoldenOrb.MixProject do
       # {:orb, path: "../orb", override: true},
       # {:orb_wasmtime, "~> 0.1.10", only: :test},
       {:wasmex, "~> 0.9.2", only: :test},
-      {:ex_doc, "~> 0.27", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.27", only: :dev, runtime: false},
+      {:bandit, "~> 1.0", only: :test}
     ]
   end
 

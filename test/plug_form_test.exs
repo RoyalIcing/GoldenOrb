@@ -385,6 +385,50 @@ defmodule PlugFormTest do
     end
   end
 
+  defmodule Button do
+    use Orb
+    defstruct type: "submit", text: ""
+
+    def submit(text), do: struct!(__MODULE__, text: text)
+
+    Orb.set_func_prefix("Button")
+
+    defw html_write(
+           type: Str,
+           text: Str,
+           write: I32.UnsafePointer,
+           write_size: I32
+         ) :: {I32.UnsafePointer, I32} do
+      Orb.Control.block :items do
+        ~S|<button type="|
+        type
+        ~S|">|
+        text
+        ~s|</button>\n|
+      end
+      |> Writer.write!(mut!(write), mut!(write_size))
+
+      {write, write_size}
+    end
+
+    alias __MODULE__
+
+    defimpl Writer do
+      def write!(button, write!, write_size!) do
+        Orb.InstructionSequence.new(nil, [
+          @for.html_write(
+            button.type,
+            button.text,
+            write!.read,
+            write_size!.read
+          ),
+          write_size!.write,
+          write!.write
+        ])
+      end
+    end
+  end
+
   defmodule PrimaryNav do
     use Orb
     defstruct [:path]
@@ -392,8 +436,6 @@ defmodule PlugFormTest do
     Memory.pages(2)
 
     Orb.include(NavLink)
-    Orb.include(Form)
-    Orb.include(Textbox)
 
     import Writer
 
@@ -436,6 +478,7 @@ defmodule PlugFormTest do
 
     Orb.include(Form)
     Orb.include(Textbox)
+    Orb.include(Button)
 
     import Writer
 
@@ -443,7 +486,8 @@ defmodule PlugFormTest do
       Form.get(
         id: "profile",
         children: [
-          %Textbox{id: "bio", name: "bio", value: "", label: "Bio"}
+          %Textbox{id: "bio", name: "bio", value: "", label: "Bio"},
+          Button.submit("Save")
         ]
       )
     end
@@ -488,11 +532,36 @@ defmodule PlugFormTest do
              </nav>
              <form id="profile" method="get">
              <label for="bio">Bio<input id="bio" name="bio" value=""></label>
+             <button type="submit">Save</button>
              </form>
              <form>
-               <input name=\"q\" placeholder=\"Search\">
+               <input name="q" placeholder="Search">
              </form>
              """
+    end
+  end
+
+  describe "server" do
+    @tag :server
+    test "serves on port 5005" do
+      defmodule MyPlug do
+        def init(opts), do: opts
+
+        def call(conn, _opts) do
+          GoldenOrb.html(conn, %HTMLLayout{lang: :es}, [
+            %ViewTransitions{},
+            %PrimaryNav{},
+            %ProfileForm{},
+            %SearchForm{}
+          ])
+        end
+      end
+
+      # Start an http server on the default port 4000
+      # Bandit.start_link(plug: MyPlug, port: 5005)
+      start_link_supervised!({Bandit, plug: MyPlug, port: 5005})
+
+      Process.sleep(10_000)
     end
   end
 end
