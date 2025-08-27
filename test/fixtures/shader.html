@@ -19,7 +19,120 @@
             st.x *= r.x/r.y;
 
             vec3 color = vec3(0.);
-            color = vec3(st.x,st.y,abs(sin(t)));
+            color = vec3(st.x, st.y, abs(sin(t)));
+
+            fragColor = vec4(color, 1.0);
+        }
+    </script>
+</render-shader>
+<render-shader>
+    <canvas width="200" height="150" style="display: grid">
+        You need WebGL2 to render this canvas.
+    </canvas>
+    <script
+        type="x-shader/x-fragment"
+        style="display: block; white-space: pre; font-family: monospace"
+        contenteditable="plaintext-only"
+    >
+        #version 300 es
+        precision mediump float;
+        uniform vec2 r;
+        // uniform vec2 u_mouse;
+        uniform float t;
+        out vec4 fragColor;
+
+        void main() {
+            vec2 st = gl_FragCoord.xy/r.xy;
+            st.x *= r.x/r.y;
+
+              if (mod(gl_FragCoord.x + t * 20.0, 40.0) < 20.0) {
+                fragColor = vec4(vec3(0.0), 1.0);
+              } else {
+                fragColor = vec4(vec3(1.0), 1.0);
+              }
+        }
+    </script>
+</render-shader>
+<render-shader>
+    <canvas width="400" height="300" style="display: grid">
+        You need WebGL2 to render this canvas.
+    </canvas>
+    <script type="x-shader/x-fragment">
+        #version 300 es
+        precision mediump float;
+        uniform vec2 r;
+        // uniform vec2 u_mouse;
+        uniform float t;
+        out vec4 fragColor;
+
+        void main() {
+            vec2 st = gl_FragCoord.xy/r.xy;
+            st.x *= r.x/r.y;
+
+            // vec3 color = vec3(0.5);
+            // color = vec3(st.x,st.y,abs(sin(t)));
+            // fragColor = vec4(color,1.0);
+            fragColor = vec4(vec3(st.x,st.y, r.y),1.0);
+        }
+    </script>
+</render-shader>
+<render-shader>
+    <canvas width="800" height="600">
+        You need WebGL2 to render this canvas.
+    </canvas>
+    <script type="x-shader/x-fragment">
+        #version 300 es
+        precision mediump float;
+        uniform vec2 r;
+        // uniform vec2 u_mouse;
+        uniform float t;
+        out vec4 fragColor;
+
+        void main() {
+            vec2 st = gl_FragCoord.xy/r.xy;
+            st.x *= r.x/r.y;
+
+            vec3 color = vec3(0.);
+
+            // Voronoi diagram implementation
+            vec2 grid = vec2(8.0, 6.0);
+            vec2 gridSt = st * grid;
+            vec2 gridId = floor(gridSt);
+            vec2 gridUv = fract(gridSt);
+
+            float minDist = 1.0;
+            vec2 nearestPoint = vec2(0.0);
+
+            for(int y = -1; y <= 1; y++) {
+                for(int x = -1; x <= 1; x++) {
+                    vec2 neighbor = vec2(float(x), float(y));
+                    vec2 cellId = gridId + neighbor;
+
+                    // Generate pseudo-random point in each cell
+                    vec2 randomOffset = vec2(
+                        sin(cellId.x * 43.12 + cellId.y * 73.45 + t * 0.5) * 0.5 + 0.5,
+                        cos(cellId.x * 37.89 + cellId.y * 41.23 + t * 0.3) * 0.5 + 0.5
+                    ) * 0.8 + 0.1;
+
+                    vec2 point = neighbor + randomOffset - gridUv;
+                    float dist = length(point);
+
+                    if(dist < minDist) {
+                        minDist = dist;
+                        nearestPoint = cellId;
+                    }
+                }
+            }
+
+            // Color based on cell ID with time animation
+            color = vec3(
+                sin(nearestPoint.x * 2.1 + t) * 0.5 + 0.5,
+                sin(nearestPoint.y * 1.7 + t + 2.0) * 0.5 + 0.5,
+                sin((nearestPoint.x + nearestPoint.y) * 1.3 + t + 4.0) * 0.5 + 0.5
+            );
+
+            // Add some edge highlighting
+            color *= (1.0 - smoothstep(0.02, 0.03, minDist));
 
             fragColor = vec4(color,1.0);
         }
