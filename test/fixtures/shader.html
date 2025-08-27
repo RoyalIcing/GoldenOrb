@@ -3,7 +3,7 @@
 <div id="container" style="background: black"></div>
 <!-- TODO: add https://x.com/XorDev/status/1936884244128661986 -->
 <render-shader>
-    <canvas width="800" height="600">
+    <canvas width="44" height="44" style="display: grid">
         You need WebGL2 to render this canvas.
     </canvas>
     <script type="x-shader/x-fragment">
@@ -25,34 +25,259 @@
         }
     </script>
 </render-shader>
-<render-shader>
-    <canvas width="200" height="150" style="display: grid">
-        You need WebGL2 to render this canvas.
-    </canvas>
-    <script
-        type="x-shader/x-fragment"
-        style="display: block; white-space: pre; font-family: monospace"
-        contenteditable="plaintext-only"
-    >
-        #version 300 es
-        precision mediump float;
-        uniform vec2 r;
-        // uniform vec2 u_mouse;
-        uniform float t;
-        out vec4 fragColor;
+<div style="display: flex">
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            // uniform vec2 u_mouse;
+            uniform float t;
+            out vec4 fragColor;
 
-        void main() {
-            vec2 st = gl_FragCoord.xy/r.xy;
-            st.x *= r.x/r.y;
+            void main() {
+                vec2 st = gl_FragCoord.xy/r.xy;
+                st.x *= r.x/r.y;
 
-              if (mod(gl_FragCoord.x + t * 20.0, 40.0) < 20.0) {
-                fragColor = vec4(vec3(0.0), 1.0);
-              } else {
-                fragColor = vec4(vec3(1.0), 1.0);
-              }
-        }
-    </script>
-</render-shader>
+                fragColor = vec4(vec3(sin(t)), 1.0);
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            // uniform vec2 u_mouse;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+                  if (mod(gl_FragCoord.x + t * 20.0, 40.0) < 20.0) {
+                    fragColor = vec4(vec3(0.0), 1.0);
+                  } else {
+                    fragColor = vec4(vec3(1.0), 1.0);
+                  }
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            // uniform vec2 u_mouse;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+                  if (mod(gl_FragCoord.x + t, 2.0) <= 1.0) {
+                    fragColor = vec4(vec3(0.0), 1.0);
+                  } else {
+                    fragColor = vec4(vec3(1.0), 1.0);
+                  }
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            // uniform vec2 u_mouse;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+                  if (mod(gl_FragCoord.y + t, 2.0) <= 1.0) {
+                    fragColor = vec4(vec3(0.0), 1.0);
+                  } else {
+                    fragColor = vec4(vec3(1.0), 1.0);
+                  }
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            // uniform vec2 u_mouse;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+                  if (mod(gl_FragCoord.x + t, 2.0) + mod(gl_FragCoord.y + t, 2.0) <= 2.0) {
+                    fragColor = vec4(vec3(0.0), 1.0);
+                  } else {
+                    fragColor = vec4(vec3(1.0), 1.0);
+                  }
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            // uniform vec2 u_mouse;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+                if (mod(gl_FragCoord.x + mod(gl_FragCoord.y, 2.0) + t, 2.0) <= 1.0) {
+                    fragColor = vec4(vec3(0.0), 1.0);
+                  } else {
+                    fragColor = vec4(vec3(1.0), 1.0);
+                  }
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            // uniform vec2 u_mouse;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+              if ((sin((gl_FragCoord.x + t * 4.0) / 4.0) * 20.0 - gl_FragCoord.y + 22.0) < 0.0) {
+                    fragColor = vec4(vec3(0.0), 1.0);
+                  } else {
+                    fragColor = vec4(vec3(1.0), 1.0);
+                  }
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            // uniform vec2 u_mouse;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+              if ((sin((t * 4.0 - gl_FragCoord.x) / 4.0) * 20.0 - gl_FragCoord.y + 22.0) < 0.0) {
+                    fragColor = vec4(vec3(0.0), 1.0);
+                  } else {
+                    fragColor = vec4(vec3(1.0), 1.0);
+                  }
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            uniform vec4 iMouse;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+              if ((sin((gl_FragCoord.x - iMouse.x) / 4.0) * 20.0 - gl_FragCoord.y + 22.0) < 0.0) {
+                    fragColor = vec4(vec3(0.0), 1.0);
+                  } else {
+                    fragColor = vec4(vec3(1.0), 1.0);
+                  }
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            // uniform vec2 u_mouse;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+              if ((sin((gl_FragCoord.x + t) * 2.0) * 40.0 - gl_FragCoord.y) < 0.0) {
+                    fragColor = vec4(vec3(0.0), 1.0);
+                  } else {
+                    fragColor = vec4(vec3(1.0), 1.0);
+                  }
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            // uniform vec2 u_mouse;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+              if ((sin((gl_FragCoord.x + -t) * 2.0) * 40.0 - gl_FragCoord.y) < 0.0) {
+                    fragColor = vec4(vec3(0.0), 1.0);
+                  } else {
+                    fragColor = vec4(vec3(1.0), 1.0);
+                  }
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            uniform vec4 iMouse;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+              if ((sin((gl_FragCoord.x - iMouse.x) * 2.0) * 40.0 - (gl_FragCoord.y)) < 0.0) {
+                    fragColor = vec4(vec3(0.0), 1.0);
+                  } else {
+                    fragColor = vec4(vec3(1.0), 1.0);
+                  }
+            }
+        </script>
+    </render-shader>
+</div>
 <render-shader>
     <canvas width="400" height="300" style="display: grid">
         You need WebGL2 to render this canvas.
@@ -77,7 +302,7 @@
     </script>
 </render-shader>
 <render-shader>
-    <canvas width="800" height="600">
+    <canvas width="400" height="300">
         You need WebGL2 to render this canvas.
     </canvas>
     <script type="x-shader/x-fragment">
@@ -139,7 +364,7 @@
     </script>
 </render-shader>
 <render-shader>
-    <canvas width="800" height="600">
+    <canvas width="400" height="300">
         You need WebGL2 to render this canvas.
     </canvas>
     <script type="x-shader/x-fragment" id="fragmentShader2">
@@ -186,6 +411,9 @@
 <script type="module">
     class RenderShader extends HTMLElement {
         connectedCallback() {
+            this.abort = new AbortController();
+            const { signal } = this.abort;
+
             const canvas = this.querySelector("canvas");
             if (!canvas) {
                 throw Error("<render-shader> must have child <canvas>.");
@@ -254,6 +482,8 @@
             let startTime = performance.now();
             let frame = 0;
             let lastTime = 0;
+            let renderRequest = undefined;
+            const mousePosition = { x: 0.0, y: 0.0 };
 
             function render(currentTime) {
                 const elapsedTime = (currentTime - startTime) / 1000;
@@ -271,7 +501,7 @@
                 gl.uniform1f(iTimeLoc, elapsedTime);
                 gl.uniform1f(iTimeDeltaLoc, deltaTime);
                 gl.uniform1f(iFrameLoc, frame);
-                gl.uniform4f(iMouseLoc, 0, 0, 0, 0);
+                gl.uniform4f(iMouseLoc, mousePosition.x, mousePosition.y, 0, 0);
 
                 const now = new Date();
                 gl.uniform4f(
@@ -300,9 +530,30 @@
                 }
 
                 gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-                requestAnimationFrame(render);
+
+                renderRequest = requestAnimationFrame(render);
             }
             requestAnimationFrame(render);
+
+            this.setNeedsRender = () => {
+                if (renderRequest) return;
+                renderRequest = requestAnimationFrame(render);
+            };
+
+            this.mousePosition = mousePosition;
+
+            // this.addEventListener("click", this, { signal: signal });
+            this.addEventListener("mousemove", this, { signal: signal });
+            // window.addEventListener("mousemove", this, { signal: signal });
+        }
+
+        handleEvent(event) {
+            this.setNeedsRender();
+
+            // if (event.type == "mousemove") {
+            this.mousePosition.x = event.clientX;
+            this.mousePosition.y = event.clientY;
+            // }
         }
     }
     customElements.define("render-shader", RenderShader);
