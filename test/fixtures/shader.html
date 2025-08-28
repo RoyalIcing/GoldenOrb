@@ -2,29 +2,51 @@
 <meta charset="utf-8" />
 <div id="container" style="background: black"></div>
 <!-- TODO: add https://x.com/XorDev/status/1936884244128661986 -->
-<render-shader>
-    <canvas width="44" height="44" style="display: grid">
-        You need WebGL2 to render this canvas.
-    </canvas>
-    <script type="x-shader/x-fragment">
-        #version 300 es
-        precision mediump float;
-        uniform vec2 r;
-        // uniform vec2 u_mouse;
-        uniform float t;
-        out vec4 fragColor;
+<div style="display: flex">
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            // uniform vec2 u_mouse;
+            uniform float t;
+            out vec4 fragColor;
 
-        void main() {
-            vec2 st = gl_FragCoord.xy/r.xy;
-            st.x *= r.x/r.y;
+            void main() {
+                vec2 st = gl_FragCoord.xy/r.xy;
+                st.x *= r.x/r.y;
 
-            vec3 color = vec3(0.);
-            color = vec3(st.x, st.y, abs(sin(t)));
+                vec3 color = vec3(0.);
+                color = vec3(st.x, st.y, abs(sin(t)));
 
-            fragColor = vec4(color, 1.0);
-        }
-    </script>
-</render-shader>
+                fragColor = vec4(color, 1.0);
+            }
+        </script>
+    </render-shader>
+    <render-shader>
+        <canvas width="44" height="44" style="display: grid">
+            You need WebGL2 to render this canvas.
+        </canvas>
+        <script type="x-shader/x-fragment">
+            #version 300 es
+            precision mediump float;
+            uniform vec2 r;
+            uniform vec4 iMouse;
+            uniform vec3 iResolution;
+            uniform float t;
+            out vec4 fragColor;
+
+            void main() {
+              vec2 st = gl_FragCoord.xy/iResolution.xy;
+              vec2 mn = iMouse.xy/iResolution.xy;
+              fragColor = vec4(st.x,st.y,mn.y,1.0);
+            }
+        </script>
+    </render-shader>
+</div>
 <div style="display: flex">
     <render-shader>
         <canvas width="44" height="44" style="display: grid">
@@ -202,11 +224,17 @@
             precision mediump float;
             uniform vec2 r;
             uniform vec4 iMouse;
+            uniform vec3 iResolution;
             uniform float t;
             out vec4 fragColor;
 
             void main() {
-              if ((sin((gl_FragCoord.x - iMouse.x) / 4.0) * 20.0 - gl_FragCoord.y + 22.0) < 0.0) {
+              vec2 mn = iMouse.xy/iResolution.xy;
+              // float amplitude = 22.0 * mn.y;
+              float amplitude = (iResolution.y / 2.0) - 1.0;
+              amplitude *= (1.0 - mn.y);
+
+              if ((sin((gl_FragCoord.x - iMouse.x + (iMouse.y * 0.01)) / 4.0) * amplitude - gl_FragCoord.y + iResolution.y / 2.0) < 0.0) {
                     fragColor = vec4(vec3(0.0), 1.0);
                   } else {
                     fragColor = vec4(vec3(1.0), 1.0);
@@ -551,8 +579,12 @@
             this.setNeedsRender();
 
             // if (event.type == "mousemove") {
-            this.mousePosition.x = event.clientX;
-            this.mousePosition.y = event.clientY;
+            const bounds = this.getBoundingClientRect();
+            this.mousePosition.x = event.clientX - bounds.left;
+            this.mousePosition.y = event.clientY - bounds.top;
+            // console.log(bounds.top);
+            // console.log(event.clientY);
+            // console.log(this.mousePosition);
             // }
         }
     }
