@@ -1,0 +1,201 @@
+<!doctype html>
+<meta charset="utf-8" />
+<render-shader>
+    <canvas width="800" height="600">
+        You need WebGL2 to render this canvas.
+    </canvas>
+    <script type="x-shader/x-fragment">
+        #version 300 es
+        // Argyle
+        precision mediump float;
+        uniform vec2 r;
+        // uniform vec2 u_mouse;
+        uniform float t;
+        out vec4 fragColor;
+
+        float diagonalDashedLine(vec2 xy) {
+          float period = 8.0 * 8.0 * 3.0;
+          xy = mod(xy, period);
+
+          vec3 color = vec3(0.);
+          if (xy.x == xy.y) {
+            if (mod(xy.x + 6.0, 8.0) > 3.0) {
+              return 1.0;
+            }
+          }
+
+          return 0.0;
+        }
+
+        float verticalDashedLine(vec2 xy) {
+          float period = 8.0 * 8.0 * 3.0;
+          xy = mod(xy, period);
+
+          vec3 color = vec3(0.);
+          if (mod(xy.x + 5.0, 10.0) < 1.0) {
+            if (mod(xy.y + 3.0 + xy.x, 12.0) > 3.0) {
+              return 1.0;
+            }
+          }
+
+          return 0.0;
+        }
+
+        void main() {
+            float period = 8.0 * 8.0 * 3.0;
+            vec2 xy = gl_FragCoord.xy;
+            // xy.x += round(t * 60.0);
+            float v = xy.x + xy.y;
+            float u = xy.x - xy.y;
+
+            float top = diagonalDashedLine(xy) + diagonalDashedLine(vec2(xy.x, -xy.y));
+            if (top > 0.0) {
+              fragColor = vec4(vec3(0.1, 0.4, 0.2),1.0);
+              return;
+            }
+
+            vec3 color = vec3(1.0);
+
+            v = mod(v + period * 0.5, period * 2.0);
+            u = mod(u + period * 0.5, period * 2.0);
+            if (v > period && u < period) {
+              color = 1.0 - (1.0 - vec3(0.6, 0.1, 0.8)) * verticalDashedLine(xy);
+            }
+
+            v = mod(v - period, period * 2.0);
+            u = mod(u - period, period * 2.0);
+            if (v > period && u < period) {
+              color = 1.0 - (1.0 - vec3(0.9, 0.7, 0.1)) * verticalDashedLine(xy);
+            }
+            // if (xy.x > period && xy.x < 2.0*period && xy.y > xy.x && xy.y < (xy.x + period)) {
+            //   color = vec3(0.5);
+            // }
+
+            fragColor = vec4(color,1.0);
+        }
+    </script>
+</render-shader>
+<script type="module">
+    class RenderShader extends HTMLElement {
+        connectedCallback() {
+            const canvas = this.querySelector("canvas");
+            if (!canvas) {
+                throw Error("<render-shader> must have child <canvas>.");
+            }
+
+            const gl = canvas.getContext("webgl2");
+            if (!gl) throw Error("WebGL2 not supported");
+
+            const vs = `#version 300 es
+        in vec2 a_position;
+        out vec2 vUv;
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+            vUv = (a_position + 1.0) * 0.5;
+        }`;
+
+            const fs = this.querySelector("script").textContent.trim();
+
+            function compileShader(type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    throw new Error(gl.getShaderInfoLog(shader));
+                }
+                return shader;
+            }
+
+            const program = gl.createProgram();
+            gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vs));
+            gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fs));
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                throw new Error(gl.getProgramInfoLog(program));
+            }
+
+            const buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
+                gl.STATIC_DRAW,
+            );
+
+            const pos = gl.getAttribLocation(program, "a_position");
+            gl.enableVertexAttribArray(pos);
+            gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+
+            // Get uniform locations
+            const tLoc = gl.getUniformLocation(program, "t");
+            const rLoc = gl.getUniformLocation(program, "r");
+            const iResolutionLoc = gl.getUniformLocation(
+                program,
+                "iResolution",
+            );
+            const iTimeLoc = gl.getUniformLocation(program, "iTime");
+            const iTimeDeltaLoc = gl.getUniformLocation(program, "iTimeDelta");
+            const iFrameLoc = gl.getUniformLocation(program, "iFrame");
+            const iMouseLoc = gl.getUniformLocation(program, "iMouse");
+            const iDateLoc = gl.getUniformLocation(program, "iDate");
+            const iSampleRateLoc = gl.getUniformLocation(
+                program,
+                "iSampleRate",
+            );
+
+            let startTime = performance.now();
+            let frame = 0;
+            let lastTime = 0;
+
+            function render(currentTime) {
+                const elapsedTime = (currentTime - startTime) / 1000;
+                const deltaTime = (currentTime - lastTime) / 1000;
+                lastTime = currentTime;
+                frame++;
+
+                gl.viewport(0, 0, canvas.width, canvas.height);
+                gl.useProgram(program);
+
+                // Set uniforms
+                gl.uniform2f(rLoc, canvas.width, canvas.height);
+                gl.uniform1f(tLoc, elapsedTime);
+                gl.uniform3f(iResolutionLoc, canvas.width, canvas.height, 1.0);
+                gl.uniform1f(iTimeLoc, elapsedTime);
+                gl.uniform1f(iTimeDeltaLoc, deltaTime);
+                gl.uniform1f(iFrameLoc, frame);
+                gl.uniform4f(iMouseLoc, 0, 0, 0, 0);
+
+                const now = new Date();
+                gl.uniform4f(
+                    iDateLoc,
+                    now.getFullYear(),
+                    now.getMonth(),
+                    now.getDate(),
+                    now.getHours() * 3600 +
+                        now.getMinutes() * 60 +
+                        now.getSeconds(),
+                );
+                gl.uniform1f(iSampleRateLoc, 44100);
+
+                // Set channel times and resolutions (default values)
+                for (let i = 0; i < 4; i++) {
+                    const channelTimeLoc = gl.getUniformLocation(
+                        program,
+                        `iChannelTime[${i}]`,
+                    );
+                    const channelResLoc = gl.getUniformLocation(
+                        program,
+                        `iChannelResolution[${i}]`,
+                    );
+                    if (channelTimeLoc) gl.uniform1f(channelTimeLoc, 0);
+                    if (channelResLoc) gl.uniform3f(channelResLoc, 0, 0, 0);
+                }
+
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                requestAnimationFrame(render);
+            }
+            requestAnimationFrame(render);
+        }
+    }
+    customElements.define("render-shader", RenderShader);
+</script>
