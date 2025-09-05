@@ -12,9 +12,9 @@
         // uniform vec2 u_mouse;
         uniform float t;
         out vec4 fragColor;
+        const float period = 8.0 * 8.0 * 3.0;
 
         float diagonalDashedLine(vec2 xy) {
-          float period = 8.0 * 8.0 * 3.0;
           xy = mod(xy, period);
 
           vec3 color = vec3(0.);
@@ -28,7 +28,6 @@
         }
 
         float verticalDashedLine(vec2 xy) {
-          float period = 8.0 * 8.0 * 3.0;
           xy = mod(xy, period);
 
           vec3 color = vec3(0.);
@@ -42,7 +41,6 @@
         }
 
         void main() {
-            float period = 8.0 * 8.0 * 3.0;
             vec2 xy = gl_FragCoord.xy;
             // xy.x += round(t * 60.0);
             float v = xy.x + xy.y;
